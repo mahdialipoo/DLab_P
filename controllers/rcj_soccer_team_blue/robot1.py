@@ -12,7 +12,18 @@ from PID import PID
 from math import sqrt
 class MyRobot1(RCJSoccerRobot):
     def run(self):
-        I=0
+        T=0.0005
+        L=0.085
+        R=0.02
+        xd=-0.4
+        yd=-0.4
+        phd=0
+        w=0 
+        e_r=[0,0] 
+        robot_pos = self.get_gps_coordinates()
+        robot_com=self.get_compass_heading()
+        C_r=PID(kd=0,kp=0.2,ki=0,T=T)     
+        C_ph=PID(kd=0,kp=0.2,ki=0,T=T)
         while self.robot.step(TIME_STEP) != -1:
             start=time()
             if self.is_new_data():
@@ -41,24 +52,17 @@ class MyRobot1(RCJSoccerRobot):
 
                 self.left_motor.setVelocity(10) # self code
                 #******************************************************************mycode
-                T=0.0005
-                L=0.085
-                R=0.02
-                xd=-0.4
-                yd=-0.4
-                phd=0
-                w=0  
-                C_r=PID(kd=0,kp=0.2,ki=0,T=T)     
-                C_ph=PID(kd=0,kp=0.2,ki=0,T=T)
+                rd=sqrt(xd**2+yd**2)
                 robot_pos = self.get_gps_coordinates()
                 robot_com=self.get_compass_heading()
-                e=xd-robot_pos[1]
-                u=0
-                print(sqrt(16.0))
-                eph=phd-robot_com
-                w=5*eph
-                vl=(2*u+L*w)/(2*R)
-                vr=(2*u-L*w)/(2*R)
+                r=sqrt(robot_pos[0]**2+robot_pos[1]**2)
+                e_r[0]=e_r[1]
+                e_r[1]=rd-r
+                u=C_r.run(e_r)
+                #eph=phd-robot_com
+                w=0
+                vl=(2*u[1]+L*w)/(2*R)
+                vr=(2*u[1]-L*w)/(2*R)
                 if(vl<2):
                     vl=0
                 if(vr<2):
